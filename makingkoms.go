@@ -10,12 +10,13 @@ import (
 	"github.com/strava/go.strava"
 	"encoding/json"
 	"github.com/gorilla/mux"
+	"github.com/rs/cors"
 	
 )
 
 type Segment struct {
-    Name      string    `json:"name"`
-    Kom bool      `json:"kom"`
+    Name  string    `json:"name"`
+    Kom 	bool      `json:"kom"`
     
 }
 
@@ -36,14 +37,20 @@ func main() {
 	r.HandleFunc("/t", hello).Methods("GET")
 	r.HandleFunc("/athlete", loadAthlete).Methods("GET")
 	r.HandleFunc("/athleteactivities", loadAtleteActivities).Methods("GET")
+	
+	
+	// holding on for example sake
+	r.HandleFunc("/goodbye", goodbye)
   
 	http.Handle("/", r)
 	
-	http.HandleFunc("/goodbye", goodbye)
-	http.ListenAndServe(":8000", nil)
-
+	
+	handler := cors.Default().Handler(r)
+    http.ListenAndServe(":9000", handler)
   
 }
+
+
 
 func loadAthlete(w http.ResponseWriter, r *http.Request) {
 	 w.Header().Set("Content-Type", "application/json; charset=UTF-8") 
@@ -52,7 +59,7 @@ func loadAthlete(w http.ResponseWriter, r *http.Request) {
 	client := strava.NewClient(accessToken)
 	service := strava.NewCurrentAthleteService(client)
 
-	// returns a AthleteDetailed object
+	// returns a AthleteDetailed object, the second variable I think is errors
 	athlete, _ := service.Get().Do()
 	
 	
@@ -60,8 +67,8 @@ func loadAthlete(w http.ResponseWriter, r *http.Request) {
         panic(err)
     }
 	
+}
 	
-	}
 	
 	
 func loadAtleteActivities(w http.ResponseWriter, r *http.Request) {
@@ -78,7 +85,7 @@ func loadAtleteActivities(w http.ResponseWriter, r *http.Request) {
 		if err := json.NewEncoder(w).Encode(activities); err != nil {
         panic(err)
     }
-	}
+}
 	
 	
 
@@ -105,12 +112,14 @@ func helloPost(w http.ResponseWriter, r *http.Request) {
 	}
 	
 	
+	
 func getStravaConfig()(string, string){
 	accessToken := "a94d7f430c0da41b2062ac49ed7ff7e838fc6ec4"
 	athleteId := "52931"
 	return accessToken, athleteId
 }
-	
+
+		
 func hello(w http.ResponseWriter, r *http.Request) {
 	io.WriteString(w, "Hello world!")
 	
