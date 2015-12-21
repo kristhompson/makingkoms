@@ -12,6 +12,8 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	
+	"strconv"
+	
 )
 
 type Segment struct {
@@ -37,6 +39,7 @@ func main() {
 	r.HandleFunc("/t", hello).Methods("GET")
 	r.HandleFunc("/athlete", loadAthlete).Methods("GET")
 	r.HandleFunc("/athleteactivities", loadAtleteActivities).Methods("GET")
+	r.HandleFunc("/activityDetails/{activityId}", loadActivityDetails).Methods("GET")
 	
 	
 	// holding on for example sake
@@ -87,6 +90,29 @@ func loadAtleteActivities(w http.ResponseWriter, r *http.Request) {
     }
 }
 	
+	
+	
+func loadActivityDetails(w http.ResponseWriter, r *http.Request) {
+	 w.Header().Set("Content-Type", "application/json; charset=UTF-8") 
+	
+	 vars := mux.Vars(r)
+    activityIdStr := vars["activityId"]
+	activityId, _ := strconv.ParseInt(activityIdStr, 0, 64)
+	//activityId, _ := strconv.Atoi(activityIdStr)
+	fmt.Printf(activityIdStr)
+	
+	accessToken, _ := getStravaConfig()
+	client := strava.NewClient(accessToken)
+	service := strava.NewActivitiesService(client)
+	
+	
+	// returns a slice of ActivityDetail objects
+	activity, _ := service.Get(activityId).IncludeAllEfforts().Do()
+		
+	if err := json.NewEncoder(w).Encode(activity); err != nil {
+        panic(err)
+    }
+}
 	
 
 func goodbye(w http.ResponseWriter, r *http.Request) {
