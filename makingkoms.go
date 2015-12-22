@@ -40,6 +40,7 @@ func main() {
 	r.HandleFunc("/athlete", loadAthlete).Methods("GET")
 	r.HandleFunc("/athleteactivities", loadAtleteActivities).Methods("GET")
 	r.HandleFunc("/activityDetails/{activityId}", loadActivityDetails).Methods("GET")
+	r.HandleFunc("/segmentLeaderboard/{segmentId}", loadSegmentLeaderboard).Methods("GET")
 	
 	
 	// holding on for example sake
@@ -114,6 +115,35 @@ func loadActivityDetails(w http.ResponseWriter, r *http.Request) {
     }
 }
 	
+	
+	
+	func loadSegmentLeaderboard(w http.ResponseWriter, r *http.Request) {
+	 w.Header().Set("Content-Type", "application/json; charset=UTF-8") 
+	
+	
+	 vars := mux.Vars(r)
+	fmt.Printf("what" + vars["setmentId"])
+    segmentIdStr := vars["setmentId"]
+	fmt.Printf(segmentIdStr)
+	
+	segmentId, _ := strconv.ParseInt(segmentIdStr, 0, 64)
+	
+	
+	accessToken, _ := getStravaConfig()
+	client := strava.NewClient(accessToken)
+	service := strava.NewSegmentsService(client)
+	
+	
+	// returns a slice of ActivityDetail objects
+	//leaderboard, _ := service.GetLeaderboard(segmentId).Following().Do()
+	leaderboard, _ := service.GetLeaderboard(segmentId).Do()
+		
+	if err := json.NewEncoder(w).Encode(leaderboard); err != nil {
+        panic(err)
+    }
+}
+
+
 
 func goodbye(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json; charset=UTF-8") 
