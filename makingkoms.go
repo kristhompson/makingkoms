@@ -122,9 +122,10 @@ func loadActivityDetails(w http.ResponseWriter, r *http.Request) {
 	
 	
 	 vars := mux.Vars(r)
-	fmt.Printf("what" + vars["setmentId"])
-    segmentIdStr := vars["setmentId"]
-	fmt.Printf(segmentIdStr)
+	
+    segmentIdStr := vars["segmentId"]
+	fmt.Printf("whaty" + segmentIdStr)
+	//fmt.Printf(segmentIdStr)
 	
 	segmentId, _ := strconv.ParseInt(segmentIdStr, 0, 64)
 	
