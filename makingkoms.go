@@ -10,8 +10,11 @@ import (
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
 	"strconv"
+	"github.com/kristhompson/datastore"
 	
 )
+
+
 
 type Segment struct {
     Name  string    `json:"name"`
@@ -24,10 +27,14 @@ var segments Segments
 
 
 func main() {
+	
+	datastore.InitDB()
+	
 	// establish my routes
 	r := mux.NewRouter()
 	
 	r.HandleFunc("/athlete", loadAthlete).Methods("GET")
+	r.HandleFunc("/athlete/{athleteId}", loadAthlete).Methods("GET")
 	r.HandleFunc("/athleteactivities", loadAtleteActivities).Methods("GET")
 	r.HandleFunc("/activityDetails/{activityId}", loadActivityDetails).Methods("GET")
 	r.HandleFunc("/segmentLeaderboard/{segmentId}", loadSegmentLeaderboard).Methods("GET")
@@ -44,21 +51,47 @@ func main() {
 }
 
 
-
+/*
+optionall passes in athlete id
+*/
 func loadAthlete(w http.ResponseWriter, r *http.Request) {
 	 w.Header().Set("Content-Type", "application/json; charset=UTF-8") 
 	
+	/**
+	Get athlete if passed in
+	*/
+	vars := mux.Vars(r)
+    athleteIdStr := vars["athleteId"]
+	athleteId, _ := strconv.ParseInt(athleteIdStr, 0, 64)
+	fmt.Printf("id is")
+	fmt.Printf(athleteIdStr)
+	
 	accessToken, _ := getStravaConfig()
 	client := strava.NewClient(accessToken)
-	service := strava.NewCurrentAthleteService(client)
+	
 
 	// returns a AthleteDetailed object, the second variable I think is errors
-	athlete, _ := service.Get().Do()
-	
-	
-	if err := json.NewEncoder(w).Encode(athlete); err != nil {
+	if(athleteId != 0){
+		service := strava.NewAthletesService(client)
+		athlete, _ := service.Get(athleteId).Do()
+		
+		if err := json.NewEncoder(w).Encode(athlete); err != nil {
         panic(err)
     }
+	}else{
+		service := strava.NewCurrentAthleteService(client)
+		athlete, _ := service.Get().Do()
+		
+		if err := json.NewEncoder(w).Encode(athlete); err != nil {
+        panic(err)
+    }
+	}
+	
+	
+	
+	
+	
+	
 }
 	
 	
