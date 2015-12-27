@@ -5,21 +5,17 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"os"
-
 	"github.com/strava/go.strava"
 	"encoding/json"
 	"github.com/gorilla/mux"
 	"github.com/rs/cors"
-	
 	"strconv"
 	
 )
 
 type Segment struct {
     Name  string    `json:"name"`
-    Kom 	bool      `json:"kom"`
-    
+    Kom 	bool      `json:"kom"`   
 }
 
 type Segments []Segment
@@ -27,16 +23,10 @@ var segments Segments
 
 
 
-
-
 func main() {
-	
-	
 	// establish my routes
-	
 	r := mux.NewRouter()
 	
-	r.HandleFunc("/t", hello).Methods("GET")
 	r.HandleFunc("/athlete", loadAthlete).Methods("GET")
 	r.HandleFunc("/athleteactivities", loadAtleteActivities).Methods("GET")
 	r.HandleFunc("/activityDetails/{activityId}", loadActivityDetails).Methods("GET")
@@ -51,7 +41,6 @@ func main() {
 	
 	handler := cors.Default().Handler(r)
     http.ListenAndServe(":9000", handler)
-  
 }
 
 
@@ -70,7 +59,6 @@ func loadAthlete(w http.ResponseWriter, r *http.Request) {
 	if err := json.NewEncoder(w).Encode(athlete); err != nil {
         panic(err)
     }
-	
 }
 	
 	
@@ -99,7 +87,6 @@ func loadActivityDetails(w http.ResponseWriter, r *http.Request) {
 	 vars := mux.Vars(r)
     activityIdStr := vars["activityId"]
 	activityId, _ := strconv.ParseInt(activityIdStr, 0, 64)
-	//activityId, _ := strconv.Atoi(activityIdStr)
 	fmt.Printf(activityIdStr)
 	
 	accessToken, _ := getStravaConfig()
@@ -116,16 +103,21 @@ func loadActivityDetails(w http.ResponseWriter, r *http.Request) {
 }
 	
 	
+/**
+	Get the leaderboard.  Optional pass in the parameter of 'following'
 	
-	func loadSegmentLeaderboard(w http.ResponseWriter, r *http.Request) {
+	/segmentLeaderboard/{segmentId?following=true}
+	*/	
+func loadSegmentLeaderboard(w http.ResponseWriter, r *http.Request) {
 	 w.Header().Set("Content-Type", "application/json; charset=UTF-8") 
 	
-	
 	 vars := mux.Vars(r)
-	
     segmentIdStr := vars["segmentId"]
-	fmt.Printf("whaty" + segmentIdStr)
-	//fmt.Printf(segmentIdStr)
+	
+	
+	// get query param if it exists
+	followingStr := r.URL.Query().Get("following")
+	following, _ := strconv.ParseBool(followingStr)
 	
 	segmentId, _ := strconv.ParseInt(segmentIdStr, 0, 64)
 	
@@ -134,10 +126,15 @@ func loadActivityDetails(w http.ResponseWriter, r *http.Request) {
 	client := strava.NewClient(accessToken)
 	service := strava.NewSegmentsService(client)
 	
+	leaderboard, _ := service.GetLeaderboard(segmentId).Following().Do()
 	
 	// returns a slice of ActivityDetail objects
-	//leaderboard, _ := service.GetLeaderboard(segmentId).Following().Do()
-	leaderboard, _ := service.GetLeaderboard(segmentId).Do()
+	if(following){
+		leaderboard, _ = service.GetLeaderboard(segmentId).Following().Do()
+	}else{
+		leaderboard, _ = service.GetLeaderboard(segmentId).Do()
+	}
+	
 		
 	if err := json.NewEncoder(w).Encode(leaderboard); err != nil {
         panic(err)
@@ -164,12 +161,13 @@ func goodbye(w http.ResponseWriter, r *http.Request) {
 }
 
 
-func helloPost(w http.ResponseWriter, r *http.Request) {
-	io.WriteString(w, "Hello world POST!")
-	}
+
 	
 	
-	
+
+	/**
+	Holder of basic information
+	*/	
 func getStravaConfig()(string, string){
 	accessToken := "a94d7f430c0da41b2062ac49ed7ff7e838fc6ec4"
 	athleteId := "52931"
@@ -177,27 +175,4 @@ func getStravaConfig()(string, string){
 }
 
 		
-func hello(w http.ResponseWriter, r *http.Request) {
-	io.WriteString(w, "Hello world!")
-	
-	accessToken, _ := getStravaConfig()
-	var segmentId int64
-	
-	segmentId = 9773190
-	
-	client := strava.NewClient(accessToken)
-	
-	//io.WriteString(w,  segmentId.)
-	
-	segment, err := strava.NewSegmentsService(client).Get(segmentId).Do()
-	if err != nil {
-		os.Exit(1)
-	}
-	
-	
-	
-	fmt.Printf(segment.Name)
-	
-	io.WriteString(w, segment.Name)
-	
-}
+
