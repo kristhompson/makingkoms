@@ -11,7 +11,7 @@ import (
 	"github.com/rs/cors"
 	"strconv"
 	"github.com/kristhompson/datastore"
-	
+	"gopkg.in/gcfg.v1"	
 )
 
 
@@ -23,6 +23,13 @@ type Segment struct {
 
 type Segments []Segment
 var segments Segments
+
+type Config struct {
+        Section struct {
+                AccessToken string
+                AthleteId string
+        }
+	}
 
 
 
@@ -63,7 +70,7 @@ func loadAthlete(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
     athleteIdStr := vars["athleteId"]
 	athleteId, _ := strconv.ParseInt(athleteIdStr, 0, 64)
-	fmt.Printf("id is")
+	fmt.Printf("iddd is")
 	fmt.Printf(athleteIdStr)
 	
 	accessToken, _ := getStravaConfig()
@@ -202,8 +209,25 @@ func goodbye(w http.ResponseWriter, r *http.Request) {
 	Holder of basic information
 	*/	
 func getStravaConfig()(string, string){
-	accessToken := "a94d7f430c0da41b2062ac49ed7ff7e838fc6ec4"
-	athleteId := "52931"
+	
+	fmt.Printf("athlete")
+	
+	var cfg Config
+	err := gcfg.ReadFileInto(&cfg, "myconfig.gcfg")
+	
+		if(err != nil){
+			fmt.Printf("errrr")
+			}
+		
+
+	accessToken := cfg.Section.AccessToken
+	athleteId := cfg.Section.AthleteId
+	
+	
+	fmt.Printf(athleteId)
+	
+	//accessToken := "a94d7f430c0da41b2062ac49ed7ff7e838fc6ec4"
+    //athleteId := "52931"
 	return accessToken, athleteId
 }
 
